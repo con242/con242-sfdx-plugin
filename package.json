@@ -1,7 +1,7 @@
 {
   "name": "con242-sfdx-plugin",
   "description": "SFDX Plugin to ease package development workflow",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "con242",
   "bugs": "https://github.com/con242/con242-sfdx-plugin/issues",
   "dependencies": {
