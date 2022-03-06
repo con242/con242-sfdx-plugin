@@ -1,5 +1,5 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { AnyJson } from '@salesforce/ts-types';
+import { flags, SfdxCommand } from "@salesforce/command";
+import { AnyJson } from "@salesforce/ts-types";
 export default class Org extends SfdxCommand {
     static description: string;
     static examples: string[];
@@ -14,4 +14,5 @@ export default class Org extends SfdxCommand {
     protected static requiresProject: boolean;
     run(): Promise<AnyJson>;
     private deployPackageTreeNode;
+    private print;
 }

@@ -1,7 +1,7 @@
 {
   "name": "con242-sfdx-plugin",
   "description": "SFDX Plugin to ease package development workflow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "con242",
   "bugs": "https://github.com/con242/con242-sfdx-plugin/issues",
   "dependencies": {
@@ -46,6 +46,7 @@
     "prettier": "^2",
     "pretty-quick": "^3",
     "sinon": "10.0.0",
+    "standard-version": "^9.3.2",
     "ts-node": "^10",
     "typescript": "4"
   },
@@ -86,6 +87,7 @@
     "posttest": "eslint src/**/*.ts test/**/*.ts",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "nyc --extension .ts --require ts-node/register mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "release": "standard-version"
   }
 }

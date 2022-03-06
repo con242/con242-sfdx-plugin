@@ -4,38 +4,46 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import * as os from 'os';
-import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError, SfdxProjectJson } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
-import { Listr } from 'listr2';
-import { ComponentSet, MetadataApiDeploy } from '@salesforce/source-deploy-retrieve';
-import { getDeployUrls } from '../../../../utils/get-packages';
-import { PackageTree } from '../../../../interfaces/package-interfaces';
+import * as os from "os";
+import { flags, SfdxCommand } from "@salesforce/command";
+import { Messages, SfdxError, SfdxProjectJson } from "@salesforce/core";
+import { AnyJson } from "@salesforce/ts-types";
+import { Listr } from "listr2";
+const Table = require("cli-table");
+import {
+  ComponentSet,
+  DeployMessage,
+  MetadataApiDeploy,
+} from "@salesforce/source-deploy-retrieve";
+import { getDeployUrls } from "../../../../utils/get-packages";
+import {
+  DeployError,
+  PackageTree,
+} from "../../../../interfaces/package-interfaces";
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('con242-sfdx-plugin', 'deploy');
+const messages = Messages.loadMessages("con242-sfdx-plugin", "deploy");
 
 export default class Org extends SfdxCommand {
-  public static description = messages.getMessage('commandDescription');
+  public static description = messages.getMessage("commandDescription");
 
-  public static examples = messages.getMessage('examples').split(os.EOL);
+  public static examples = messages.getMessage("examples").split(os.EOL);
 
-  public static args = [{ name: 'file' }];
+  public static args = [{ name: "file" }];
 
   protected static flagsConfig = {
     // flag with a value (-n, --name=VALUE)
     packagename: flags.string({
-      char: 'p',
-      description: messages.getMessage('packageFlagDescription'),
+      char: "p",
+      description: messages.getMessage("packageFlagDescription"),
     }),
     includedependencies: flags.boolean({
-      char: 'i',
+      char: "i",
       required: false,
-      description: messages.getMessage('depFlagDescription'),
+      description: messages.getMessage("depFlagDescription"),
     }),
   };
 
@@ -49,13 +57,20 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = true;
 
   public async run(): Promise<AnyJson> {
-    this.ux.log('Note: Managed Packages are not considered when deploying the dependencies...');
+    this.ux.log(
+      "Note: Managed Packages are not considered when deploying the dependencies..."
+    );
     // map flags to variables
-    const packagename = (this.flags.packagename || '') as string;
-    const includedependencies = (this.flags.includedependencies || '') as boolean;
+    const packagename = (this.flags.packagename || "") as string;
+    const includedependencies = (this.flags.includedependencies ||
+      "") as boolean;
     // get packages
-    const projectJson: SfdxProjectJson = await this.project.retrieveSfdxProjectJson();
-    const packageDependencyTree: PackageTree = getDeployUrls(projectJson, packagename);
+    const projectJson: SfdxProjectJson =
+      await this.project.retrieveSfdxProjectJson();
+    const packageDependencyTree: PackageTree = getDeployUrls(
+      projectJson,
+      packagename
+    );
 
     if (packageDependencyTree) {
       const tasks = new Listr([]);
@@ -81,10 +96,12 @@ export default class Org extends SfdxCommand {
       await tasks.run();
       // deploy dependencies
     } else {
-      throw new SfdxError(messages.getMessage('errorNoPckResults', [packagename]));
+      throw new SfdxError(
+        messages.getMessage("errorNoPckResults", [packagename])
+      );
     }
 
-    const outputString = 'All done.';
+    const outputString = "All done.";
     this.ux.log(outputString);
 
     // Return an object to be displayed with --json
@@ -94,7 +111,9 @@ export default class Org extends SfdxCommand {
   private async deployPackageTreeNode(treeNode: PackageTree): Promise<void> {
     const path: string = treeNode.path;
 
-    const deploy: MetadataApiDeploy = await ComponentSet.fromSource(path).deploy({
+    const deploy: MetadataApiDeploy = await ComponentSet.fromSource(
+      path
+    ).deploy({
       usernameOrConnection: this.org.getConnection().getUsername(),
     });
     this.ux.startSpinner(`deploying ${treeNode.packagename}`);
@@ -107,12 +126,49 @@ export default class Org extends SfdxCommand {
     // Wait for polling to finish and get the DeployResult object
     const res = await deploy.pollStatus();
     if (!res.response.success) {
+      console.log(this.print(res.response.details.componentFailures));
       this.ux.stopSpinner(`Deployment of ${treeNode.packagename} failed.`);
+
       throw new SfdxError(
-        messages.getMessage('errorDeployFailed', [JSON.stringify(res.response.details.componentFailures)])
+        messages.getMessage("errorDeployFailed", [
+          "Deployment failed. Check errors.",
+        ])
       );
     } else {
       this.ux.stopSpinner(`Deployment of ${treeNode.packagename} done.`);
     }
+  }
+
+  private print(input: DeployMessage | DeployMessage[]): string {
+    var table = new Table({
+      head: ["Component Name", "Error Message"],
+    });
+    let result: DeployError[] = [];
+    if (Array.isArray(input)) {
+      result = input.map((a) => {
+        const res: DeployError = {
+          Name: a.fullName,
+          Type: a.componentType,
+          Status: a.problemType,
+          Message: a.problem,
+        };
+        return res;
+      });
+    } else {
+      const res: DeployError = {
+        Name: input.fullName,
+        Type: input.componentType,
+        Status: input.problemType,
+        Message: input.problem,
+      };
+      result = [...result, res];
+    }
+    result.forEach((r) => {
+      let obj = {};
+      obj[r.Name] = r.Message;
+      table.push(obj);
+    });
+
+    return table.toString();
   }
 }

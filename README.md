@@ -21,7 +21,7 @@ $ npm install -g con242-sfdx-plugin
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-con242-sfdx-plugin/0.0.1 darwin-x64 node-v16.6.1
+con242-sfdx-plugin/0.0.2 darwin-x64 node-v16.6.1
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -60,7 +60,7 @@ EXAMPLES
   sfdx hello:org --name myname --targetusername myOrg@example.com
 ```
 
-_See code: [src/commands/con242/source/package/deploy.ts](https://github.com/con242/con242-sfdx-plugin/blob/v0.0.1/src/commands/con242/source/package/deploy.ts)_
+_See code: [src/commands/con242/source/package/deploy.ts](https://github.com/con242/con242-sfdx-plugin/blob/v0.0.2/src/commands/con242/source/package/deploy.ts)_
 <!-- commandsstop -->
 <!-- debugging-your-plugin -->
 # Debugging your plugin

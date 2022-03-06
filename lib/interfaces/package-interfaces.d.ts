@@ -8,3 +8,9 @@ export interface Status {
     hasError?: boolean;
     message?: string;
 }
+export interface DeployError {
+    Name?: string;
+    Type?: string;
+    Status?: string;
+    Message?: string;
+}
